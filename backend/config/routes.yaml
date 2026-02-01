@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=../vendor/symfony/routing/Loader/schema/routing.schema.json
+
+# This file is the entry point to configure the routes of your app.
+# Methods with the #[Route] attribute are automatically imported.
+# See also https://symfony.com/doc/current/routing.html
+
+# To list all registered routes, run the following command:
+#   bin/console debug:router
+
+# Route explicite pour /api/users/me (évite le conflit avec API Platform /api/users/{id})
+api_users_me:
+  path: /api/users/me
+  controller: App\Controller\Api\UserController::me
+  methods: GET
+
+controllers:
+    resource: routing.controllers
