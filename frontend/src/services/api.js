@@ -24,7 +24,10 @@ export function setStoredToken(token) {
 api.interceptors.request.use((config) => {
   const token = getStoredToken()
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`
+    const value = `Bearer ${token}`
+    config.headers.Authorization = value
+    // En-tête utilisé par le backend (Lexik JWT) pour contourner les proxies qui ne transmettent pas Authorization
+    config.headers['X-Auth-Token'] = value
   }
   return config
 })
@@ -32,9 +35,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // En cas de 401, on demande une vérification de session (getMe) avant de déconnecter.
+    // Évite une déconnexion intempestive si une route renvoie 401 par erreur.
     if (error.response?.status === 401) {
-      setStoredToken(null)
-      window.dispatchEvent(new CustomEvent('auth:logout'))
+      window.dispatchEvent(new CustomEvent('auth:check-session'))
     }
     return Promise.reject(error)
   }

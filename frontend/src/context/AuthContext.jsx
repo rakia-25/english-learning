@@ -51,9 +51,17 @@ export function AuthProvider({ children }) {
       setUser(null)
       setToken(null)
     }
+    const onCheckSession = () => {
+      // Vérifier si le token est encore valide (getMe). Si 401, loadUser() déconnecte.
+      loadUser()
+    }
     window.addEventListener('auth:logout', onLogout)
-    return () => window.removeEventListener('auth:logout', onLogout)
-  }, [])
+    window.addEventListener('auth:check-session', onCheckSession)
+    return () => {
+      window.removeEventListener('auth:logout', onLogout)
+      window.removeEventListener('auth:check-session', onCheckSession)
+    }
+  }, [loadUser])
 
   const login = useCallback(async ({ email, password }) => {
     const data = await authService.login({ email, password })
