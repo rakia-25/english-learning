@@ -52,6 +52,22 @@ class TeacherCourseController extends AbstractController
     }
 
     /**
+     * GET /api/teacher/courses/{id} → détail d'un cours (pour créer un examen, etc.)
+     */
+    #[Route('/courses/{id}', name: 'course_get', methods: ['GET'])]
+    public function getCourse(string $id): JsonResponse
+    {
+        $course = $this->courseRepository->find($id);
+        if (!$course instanceof Course) {
+            return $this->json(['message' => 'Course not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $this->denyAccessUnlessGranted(CourseVoter::EDIT, $course);
+
+        return $this->json($this->serializeCourseWithClassroom($course));
+    }
+
+    /**
      * POST /api/teacher/classrooms/{id}/courses : { title, description, content }
      */
     #[Route('/classrooms/{id}/courses', name: 'classroom_courses_create', methods: ['POST'])]

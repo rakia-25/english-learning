@@ -31,6 +31,29 @@ class TeacherExamController extends AbstractController
     }
 
     /**
+     * GET /api/teacher/courses/{id}/exams → liste des examens du cours
+     */
+    #[Route('/courses/{id}/exams', name: 'course_exams_list', methods: ['GET'])]
+    public function listExamsForCourse(string $id): JsonResponse
+    {
+        $course = $this->courseRepository->find($id);
+        if (!$course instanceof Course) {
+            return $this->json(['message' => 'Course not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $this->denyAccessUnlessGranted(CourseVoter::EDIT, $course);
+
+        $exams = $course->getExams();
+
+        return $this->json([
+            'exams' => array_map(
+                fn (Exam $e) => $this->serializeExamSummary($e),
+                $exams->toArray()
+            ),
+        ]);
+    }
+
+    /**
      * POST /api/teacher/courses/{id}/exams : { title, duration, passingScore }
      */
     #[Route('/courses/{id}/exams', name: 'course_exams_create', methods: ['POST'])]
@@ -184,6 +207,19 @@ class TeacherExamController extends AbstractController
                 'average_score' => $averageScore !== null ? round($averageScore, 2) : null,
             ],
         ]);
+    }
+
+    private function serializeExamSummary(Exam $e): array
+    {
+        return [
+            'id' => $e->getId(),
+            'title' => $e->getTitle(),
+            'duration' => $e->getDuration(),
+            'passing_score' => $e->getPassingScore(),
+            'questions_count' => $e->getQuestions()->count(),
+            'is_published' => $e->isPublished(),
+            'created_at' => $e->getCreatedAt()?->format(\DateTimeInterface::ATOM),
+        ];
     }
 
     private function serializeExam(Exam $e): array
